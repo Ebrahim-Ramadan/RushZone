@@ -8,12 +8,14 @@ export default defineConfig({
     checker({ 
       typescript: {
         tsconfigPath: './tsconfig.json', // Specify the path to your tsconfig.json
-        build: true, // Enable build mode to check types during build
+        // build: true, // REMOVE this line.  It's not a valid option here.
       },
       overlay: {
         initialIsOpen: false, // Set to false to prevent the overlay from opening on initial load
       },
-
+      // Add the build option here, outside the typescript object
+      build: true, // Set to false to allow the build to continue despite errors
+    
     })
   ],
 
