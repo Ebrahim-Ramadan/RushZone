@@ -5,7 +5,16 @@ import checker from 'vite-plugin-checker';
 export default defineConfig({
   plugins: [
     react(),
-    checker({ typescript: false })
+    checker({ 
+      typescript: {
+        tsconfigPath: './tsconfig.json', // Specify the path to your tsconfig.json
+        build: true, // Enable build mode to check types during build
+      },
+      overlay: {
+        initialIsOpen: false, // Set to false to prevent the overlay from opening on initial load
+      },
+
+    })
   ],
 
 })
