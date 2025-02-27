@@ -1,0 +1,430 @@
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #222;
+  color: white;
+  overflow: hidden;
+}
+
+.app-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Start Screen */
+.start-screen {
+  width: 600px;
+  padding: 40px;
+  background-color: #333;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.start-screen h1 {
+  font-size: 32px;
+  color: #ff6b6b;
+  margin-bottom: 20px;
+  text-shadow: 0 0 8px #ff6b6b;
+}
+
+.start-screen p {
+  margin-bottom: 30px;
+  color: #ddd;
+}
+
+.difficulty-selector {
+  margin-bottom: 30px;
+}
+
+.difficulty-selector h3 {
+  margin-bottom: 10px;
+  color: #aaa;
+}
+
+.difficulty-options {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.difficulty-options button {
+  padding: 8px 16px;
+  background-color: #444;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.difficulty-options button:hover {
+  background-color: #555;
+}
+
+.difficulty-options button.active {
+  background-color: #4a6fa5;
+  box-shadow: 0 0 8px rgba(74, 111, 165, 0.8);
+}
+
+.start-button {
+  padding: 15px 30px;
+  font-size: 18px;
+  font-weight: bold;
+  background-color: #ff6b6b;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 30px;
+}
+
+.start-button:hover {
+  background-color: #ff8080;
+  transform: scale(1.05);
+}
+
+.instructions {
+  text-align: left;
+  margin-top: 20px;
+  background-color: #444;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.instructions h3 {
+  margin-bottom: 10px;
+  color: #aaa;
+}
+
+.instructions ul {
+  padding-left: 20px;
+}
+
+.instructions li {
+  margin-bottom: 5px;
+  color: #ddd;
+}
+
+/* Game Container */
+.game-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.game-stats {
+  display: flex;
+  justify-content: space-between;
+  width: 600px;
+  padding: 10px;
+  background-color: #333;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.stat {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.weather {
+  color: #4db8ff;
+}
+
+.game-area {
+  position: relative;
+  overflow: hidden;
+  background-color: #555;
+  border-left: 10px solid #ff6b6b;
+  border-right: 10px solid #ff6b6b;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Road */
+.road-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.road-line {
+  position: absolute;
+  width: 10px;
+  height: 60px;
+  background-color: white;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: -200px 0 white, 200px 0 white;
+}
+
+/* Player Car */
+.player-car {
+  position: absolute;
+  width: 50px;
+  height: 100px;
+  transition: left 0.1s ease-out;
+  z-index: 10;
+}
+
+.car-body {
+  position: absolute;
+  width: 50px;
+  height: 80px;
+  background-color: #ff6b6b;
+  border-radius: 10px;
+  z-index: 2;
+}
+
+.car-window {
+  position: absolute;
+  width: 40px;
+  height: 30px;
+  background-color: #333;
+  top: 10px;
+  left: 5px;
+  border-radius: 5px;
+  z-index: 3;
+}
+
+.car-wheel {
+  position: absolute;
+  width: 12px;
+  height: 20px;
+  background-color: #333;
+  border-radius: 3px;
+  z-index: 1;
+}
+
+.car-wheel-left {
+  left: -5px;
+  top: 20px;
+  box-shadow: 0 50px #333;
+}
+
+.car-wheel-right {
+  right: -5px;
+  top: 20px;
+  box-shadow: 0 50px #333;
+}
+
+.boost-flame {
+  position: absolute;
+  bottom: -25px;
+  left: 15px;
+  width: 20px;
+  height: 30px;
+  background: linear-gradient(to bottom, #ff6b6b, #ffcc00);
+  border-radius: 0 0 10px 10px;
+  z-index: 1;
+  animation: flame 0.2s infinite alternate;
+}
+
+@keyframes flame {
+  from { height: 30px; }
+  to { height: 40px; }
+}
+
+.player-car.crashed {
+  animation: shake 0.1s infinite;
+}
+
+@keyframes shake {
+  0% { transform: translateX(-2px); }
+  25% { transform: translateX(0); }
+  50% { transform: translateX(2px); }
+  75% { transform: translateX(0); }
+  100% { transform: translateX(-2px); }
+}
+
+.player-car.boosting .car-body {
+  background-color: #ff3333;
+  box-shadow: 0 0 10px #ff3333;
+}
+
+/* Obstacles */
+.obstacle {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  z-index: 5;
+}
+
+.rock-shape {
+  width: 40px;
+  height: 40px;
+  background-color: #777;
+  border-radius: 8px;
+}
+
+.oil-shape {
+  width: 40px;
+  height: 10px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  position: relative;
+  top: 15px;
+}
+
+.oil-shape::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 5px;
+  width: 30px;
+  height: 30px;
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 70%);
+}
+
+.cone-top {
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-bottom: 30px solid #ff6b6b;
+}
+
+.cone-bottom {
+  width: 40px;
+  height: 10px;
+  background-color: #ff6b6b;
+  border-radius: 5px;
+}
+
+/* Boost Item */
+.boost-item {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  z-index: 5;
+}
+
+.boost-inner {
+  width: 30px;
+  height: 30px;
+  background-color: #4db8ff;
+  border-radius: 50%;
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  from { transform: scale(0.9); opacity: 0.7; }
+  to { transform: scale(1.1); opacity: 1; }
+}
+
+/* Weather Effects */
+.weather-effect {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.rain-drop {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.6);
+  animation: rain-fall linear infinite;
+}
+
+.snow-drop {
+  position: absolute;
+  background-color: white;
+  border-radius: 50%;
+  animation: snow-fall linear infinite;
+}
+
+.fog-layer {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+@keyframes rain-fall {
+  from { top: -20px; }
+  to { top: 100%; }
+}
+
+@keyframes snow-fall {
+  from { 
+    top: -20px; 
+    transform: translateX(0);
+  }
+  to { 
+    top: 100%; 
+    transform: translateX(20px);
+  }
+}
+
+/* Game Over Modal */
+.game-over-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+
+.modal-content {
+  width: 400px;
+  padding: 40px;
+  background-color: #333;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.modal-content h2 {
+  font-size: 28px;
+  color: #ff6b6b;
+  margin-bottom: 20px;
+}
+
+.stats {
+  margin-bottom: 30px;
+}
+
+.stats p {
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.highlight {
+  color: #4db8ff;
+  font-weight: bold;
+}
+
+.restart-button {
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  background-color: #4db8ff;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.restart-button:hover {
+  background-color: #7fc9ff;
+  transform: scale(1.05);
+}
