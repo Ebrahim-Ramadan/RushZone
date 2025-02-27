@@ -1,5 +1,4 @@
-
-// src/components/Game.jsx
+// Modified Game.jsx with improved movement
 import { useState, useEffect, useRef } from 'react'
 import Player from './Player'
 import Obstacle from './Obstacle'
@@ -33,11 +32,20 @@ function Game({ difficulty, onRestart }) {
   const [weather, setWeather] = useState('normal')
   const [weatherTimer, setWeatherTimer] = useState(0)
   
+  // Add keyStates ref to track which keys are currently pressed
+  const keyStatesRef = useRef({
+    ArrowLeft: false,
+    ArrowRight: false,
+    KeyA: false,
+    KeyD: false
+  })
+  
   const gameRef = useRef(null)
   const animationRef = useRef(null)
   const lastUpdateTimeRef = useRef(0)
   const obstacleTimerRef = useRef(0)
   const boostTimerRef = useRef(0)
+  const lastMoveTimeRef = useRef(0) // Track the last time movement was processed
   
   // Difficulty settings
   const difficultySettings = {
@@ -60,62 +68,28 @@ function Game({ difficulty, onRestart }) {
   
   const settings = difficultySettings[difficulty]
   
+  // Updated key handler effect with improved movement
   useEffect(() => {
-    const keys = {
-      ArrowLeft: false,
-      ArrowRight: false,
-      KeyA: false,
-      KeyD: false
-    }
-  
     const handleKeyDown = (e) => {
-      if (keys.hasOwnProperty(e.code)) {
-        keys[e.code] = true
+      if (keyStatesRef.current.hasOwnProperty(e.code)) {
+        keyStatesRef.current[e.code] = true
       }
     }
   
     const handleKeyUp = (e) => {
-      if (keys.hasOwnProperty(e.code)) {
-        keys[e.code] = false
+      if (keyStatesRef.current.hasOwnProperty(e.code)) {
+        keyStatesRef.current[e.code] = false
       }
     }
   
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
   
-    const moveInterval = setInterval(() => {
-      if (gameOver) return
-  
-      // Calculate turn speed based on weather
-      let turnSpeed = settings.playerTurnSpeed * 15; // Increase the base turn speed
-      if (weather === 'rain' || weather === 'snow') {
-        turnSpeed *= 0.6; // Slower turning in adverse weather
-      }
-  
-      // Direct movement based on key presses
-      if ((keys.ArrowLeft || keys.KeyA) && player.x > 0) {
-        setPlayer(prev => ({
-          ...prev,
-          x: Math.max(0, prev.x - (10 * turnSpeed)),
-          lane: Math.floor(prev.x / LANE_WIDTH)
-        }))
-      }
-  
-      if ((keys.ArrowRight || keys.KeyD) && player.x < GAME_WIDTH - 50) {
-        setPlayer(prev => ({
-          ...prev,
-          x: Math.min(GAME_WIDTH - 50, prev.x + (10 * turnSpeed)),
-          lane: Math.floor(prev.x / LANE_WIDTH)
-        }))
-      }
-    }, 5) // ~60fps
-  
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
-      clearInterval(moveInterval)
     }
-  }, [player.x, gameOver, weather, difficulty])
+  }, [])
   
   // Game loop
   useEffect(() => {
@@ -123,20 +97,48 @@ function Game({ difficulty, onRestart }) {
     
     const gameLoop = (timestamp) => {
       if (!lastUpdateTimeRef.current) {
-        lastUpdateTimeRef.current = timestamp;
+        lastUpdateTimeRef.current = timestamp
+        lastMoveTimeRef.current = timestamp
       }
     
-      const deltaTime = timestamp - lastUpdateTimeRef.current;
-      lastUpdateTimeRef.current = timestamp;
-    
+      const deltaTime = timestamp - lastUpdateTimeRef.current
+      lastUpdateTimeRef.current = timestamp
+      
+      // Process player movement every frame for smoother movement
+      // Calculate turn speed based on weather
+      let turnSpeed = settings.playerTurnSpeed * 20
+      if (weather === 'rain' || weather === 'snow') {
+        turnSpeed *= 0.6 // Slower turning in adverse weather
+      }
+      
+      // Process continuous movement instead of relying on setInterval
+      // This ensures movement happens every frame, making it much smoother
+      if (!player.crashed) {
+        if ((keyStatesRef.current.ArrowLeft || keyStatesRef.current.KeyA) && player.x > 0) {
+          setPlayer(prev => ({
+            ...prev,
+            x: Math.max(0, prev.x - (turnSpeed * deltaTime / 16)), // Scale by deltaTime for frame rate independence
+            lane: Math.floor(prev.x / LANE_WIDTH)
+          }))
+        }
+      
+        if ((keyStatesRef.current.ArrowRight || keyStatesRef.current.KeyD) && player.x < GAME_WIDTH - 50) {
+          setPlayer(prev => ({
+            ...prev,
+            x: Math.min(GAME_WIDTH - 50, prev.x + (turnSpeed * deltaTime / 16)), // Scale by deltaTime
+            lane: Math.floor(prev.x / LANE_WIDTH)
+          }))
+        }
+      }
+      
       // Create obstacles
-      obstacleTimerRef.current += deltaTime;
+      obstacleTimerRef.current += deltaTime
       if (obstacleTimerRef.current > settings.obstacleFrequency) {
-        obstacleTimerRef.current = 0;
+        obstacleTimerRef.current = 0
     
         // Randomize x position within the game width
-        const x = Math.random() * (GAME_WIDTH - 40); // Subtract obstacle width to keep it in bounds
-        const type = OBSTACLE_TYPES[Math.floor(Math.random() * OBSTACLE_TYPES.length)];
+        const x = Math.random() * (GAME_WIDTH - 40) // Subtract obstacle width to keep it in bounds
+        const type = OBSTACLE_TYPES[Math.floor(Math.random() * OBSTACLE_TYPES.length)]
     
         setObstacles(prev => [
           ...prev,
@@ -146,16 +148,16 @@ function Game({ difficulty, onRestart }) {
             y: -50, // Start above the screen
             type
           }
-        ]);
+        ])
       }
     
       // Create boosts (less frequently than obstacles)
-      boostTimerRef.current += deltaTime;
+      boostTimerRef.current += deltaTime
       if (boostTimerRef.current > settings.obstacleFrequency * 3) {
-        boostTimerRef.current = 0;
+        boostTimerRef.current = 0
     
         // Randomize x position within the game width
-        const x = Math.random() * (GAME_WIDTH - 30); // Subtract boost width to keep it in bounds
+        const x = Math.random() * (GAME_WIDTH - 30) // Subtract boost width to keep it in bounds
     
         setBoosts(prev => [
           ...prev,
@@ -164,7 +166,7 @@ function Game({ difficulty, onRestart }) {
             x: x, // Random x position
             y: -50
           }
-        ]);
+        ])
       }
     
       // Update obstacle positions
@@ -172,20 +174,20 @@ function Game({ difficulty, onRestart }) {
         prev
           .map(obstacle => ({
             ...obstacle,
-            y: obstacle.y + player.speed
+            y: obstacle.y + (player.speed * deltaTime / 16) // Scale by deltaTime for consistent speed
           }))
           .filter(obstacle => obstacle.y < GAME_HEIGHT)
-      );
+      )
     
       // Update boost positions
       setBoosts(prev =>
         prev
           .map(boost => ({
             ...boost,
-            y: boost.y + player.speed
+            y: boost.y + (player.speed * deltaTime / 16) // Scale by deltaTime for consistent speed
           }))
           .filter(boost => boost.y < GAME_HEIGHT)
-      );
+      )
     
       // Check for collisions with obstacles
       const playerRect = {
@@ -193,19 +195,19 @@ function Game({ difficulty, onRestart }) {
         y: GAME_HEIGHT - 120,
         width: 50,
         height: 100
-      };
+      }
     
       setObstacles(prev => {
-        const newObstacles = [...prev];
+        const newObstacles = [...prev]
     
         for (let i = 0; i < newObstacles.length; i++) {
-          const obstacle = newObstacles[i];
+          const obstacle = newObstacles[i]
           const obstacleRect = {
             x: obstacle.x,
             y: obstacle.y,
             width: 40,
             height: 40
-          };
+          }
     
           if (
             playerRect.x < obstacleRect.x + obstacleRect.width &&
@@ -219,35 +221,35 @@ function Game({ difficulty, onRestart }) {
                 ...prev,
                 speed: Math.max(1, prev.speed - 2),
                 crashed: true
-              }));
+              }))
     
               // Auto-recover after a short delay
               setTimeout(() => {
                 setPlayer(prev => ({ ...prev, crashed: false }))
-              }, 1000);
+              }, 1000)
             }
     
             // Remove the obstacle
-            newObstacles.splice(i, 1);
-            i--;
+            newObstacles.splice(i, 1)
+            i--
           }
         }
     
-        return newObstacles;
-      });
+        return newObstacles
+      })
     
       // Check for collisions with boosts
       setBoosts(prev => {
-        const newBoosts = [...prev];
+        const newBoosts = [...prev]
     
         for (let i = 0; i < newBoosts.length; i++) {
-          const boost = newBoosts[i];
+          const boost = newBoosts[i]
           const boostRect = {
             x: boost.x,
             y: boost.y,
             width: 30,
             height: 30
-          };
+          }
     
           if (
             playerRect.x < boostRect.x + boostRect.width &&
@@ -259,69 +261,70 @@ function Game({ difficulty, onRestart }) {
             setPlayer(prev => ({
               ...prev,
               speed: prev.baseSpeed + 3,
-              boostTime: 3000
-            }));
+              boostTime: 30000
+            }))
     
             // Add to score
-            setScore(prev => prev + 50);
+            setScore(prev => prev + 50)
     
             // Remove the boost
-            newBoosts.splice(i, 1);
-            i--;
+            newBoosts.splice(i, 1)
+            i--
           }
         }
     
-        return newBoosts;
-      });
+        return newBoosts
+      })
     
       // Update player boost time
       if (player.boostTime > 0) {
         setPlayer(prev => ({
           ...prev,
           boostTime: Math.max(0, prev.boostTime - deltaTime)
-        }));
+        }))
     
         // Reset speed when boost ends
         if (player.boostTime <= 0) {
           setPlayer(prev => ({
             ...prev,
             speed: prev.baseSpeed
-          }));
+          }))
         }
       }
     
       // Update distance and lap
-      const newDistance = distance + (player.speed / 100);
-      setDistance(newDistance);
+      const distanceIncrement = (player.speed / 100) * (deltaTime / 16)
+      const newDistance = distance + distanceIncrement
+      setDistance(newDistance)
     
       // Each lap is 1000 units
       if (Math.floor(newDistance / 1000) > lap) {
-        setLap(prev => prev + 1);
+        setLap(prev => prev + 1)
     
         // Add lap bonus
-        setScore(prev => prev + 500);
+        setScore(prev => prev + 500)
     
         // End game after 3 laps
         if (lap >= 2) {
-          setGameOver(true);
+          setGameOver(true)
         }
       }
     
       // Increase score based on distance
-      setScore(prev => prev + (player.speed / 100));
+      setScore(prev => prev + distanceIncrement)
     
       // Weather changes
-      setWeatherTimer(prev => prev + deltaTime);
+      setWeatherTimer(prev => prev + deltaTime)
       if (weatherTimer > settings.weatherChangeFrequency) {
-        setWeatherTimer(0);
+        setWeatherTimer(0)
     
         // Random weather (excluding current)
-        let availableWeather = WEATHER_TYPES.filter(w => w !== weather);
-        setWeather(availableWeather[Math.floor(Math.random() * availableWeather.length)]);
+        let availableWeather = WEATHER_TYPES.filter(w => w !== weather)
+        setWeather(availableWeather[Math.floor(Math.random() * availableWeather.length)])
       }
     
-      animationRef.current = requestAnimationFrame(gameLoop);
-    };
+      animationRef.current = requestAnimationFrame(gameLoop)
+    }
     
     animationRef.current = requestAnimationFrame(gameLoop)
     
