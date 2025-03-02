@@ -49,9 +49,10 @@ interface Boost {
 interface GameProps {
   difficulty: 'easy' | 'medium' | 'hard';
   onRestart: () => void;
+  isPaused: boolean;
 }
 
-function Game({ difficulty, onRestart }: GameProps) {
+function Game({ difficulty, onRestart , isPaused}: GameProps) {
   const [player, setPlayer] = useState<PlayerState>({
     x: GAME_WIDTH / 2 - 25,
     lane: 1,
@@ -147,7 +148,7 @@ function Game({ difficulty, onRestart }: GameProps) {
   }, [handleKeyDown, handleKeyUp])
 
   useEffect(() => {
-    if (gameOver) return
+    if (gameOver || isPaused) return
 
     const gameLoop = (timestamp: number) => {
       if (!lastUpdateTimeRef.current) {
