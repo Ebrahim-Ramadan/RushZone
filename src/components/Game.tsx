@@ -157,11 +157,12 @@ function Game({ difficulty, onRestart }: GameProps) {
       const deltaTime = timestamp - lastUpdateTimeRef.current
       lastUpdateTimeRef.current = timestamp
 
+      // Arrow key movement (incremental)
       if (!player.crashed) {
         let newX = player.x
 
         if (keyStatesRef.current.ArrowLeft || keyStatesRef.current.KeyA) {
-          newX -= 10
+          newX -= 5 // Small step to the left
           if (newX < 0) {
             newX = 0
           }
@@ -169,7 +170,7 @@ function Game({ difficulty, onRestart }: GameProps) {
         }
 
         if (keyStatesRef.current.ArrowRight || keyStatesRef.current.KeyD) {
-          newX += 10
+          newX += 5 // Small step to the right
           if (newX > GAME_WIDTH - 50) {
             newX = GAME_WIDTH - 50
           }
@@ -185,11 +186,12 @@ function Game({ difficulty, onRestart }: GameProps) {
         }
       }
 
+      // Movement towards click target
       if (targetX !== null && !player.crashed) {
         const distanceToTarget = targetX - player.x
         const direction = Math.sign(distanceToTarget)
-        const moveSpeed = player.speed * 2
-        const smoothingFactor = 0.2
+        const moveSpeed = player.speed * 1.5 // Reduced speed for smoother movement
+        const smoothingFactor = 0.3 // Increased smoothing factor for smoother movement
 
         let newX = player.x + direction * moveSpeed * deltaTime * smoothingFactor
 
